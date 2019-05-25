@@ -1,0 +1,6 @@
+from .shared import *
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '<Google key here>'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '<Google secret here>'
+SECRET_KEY = 'vw=eo2d)@p7_+zsvk$4)ro8*!#@n_utb7l445nndkx#15a6!g&'
+DEBUG = True
