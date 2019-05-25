@@ -23,6 +23,7 @@ urlpatterns = [
     path('', RedirectView.as_view(url='auth'), name='index'),
     path('admin/', admin.site.urls, name='admin'),
     path('auth/', include('authentication.urls'), name='auth'),
+    path('api/', include('api.urls'), name='profile'),
 ]
 
 urlpatterns += staticfiles_urlpatterns()
