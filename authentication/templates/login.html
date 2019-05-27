@@ -10,13 +10,11 @@
 <body>
     <div>
         <h1>Login</h1>
-        {% if user.is_authenticated %}
-        <p>Hello {{ user.username }}</p>
-        <a href="{% url 'auth:logout' %}">Logout</a>
-        {% else %}
         <script>
-            var CLIENT_ID = '{{SOCIAL_AUTH_GOOGLE_OAUTH2_KEY}}';
-            var REDIRECT_URI = '{% if request.is_secure %}https://{% else %}http://{% endif %}{{ request.get_host }}/auth-login';
+            const GOOGLE_CLIENT_ID = '{{SOCIAL_AUTH_GOOGLE_OAUTH2_KEY}}';
+            const CLIENT_ID = '{{SOCIAL_AUTH_CLIENT_ID}}';
+
+            const REDIRECT_URI = '{% if request.is_secure %}https://{% else %}http://{% endif %}{{ request.get_host }}/auth-login';
             var fragmentString = location.hash.substring(1);
 
             // Parse query string to see if page request is coming from OAuth 2.0 server.
@@ -71,7 +69,7 @@
                         referrer: 'no-referrer',
                         body: JSON.stringify({
                             grant_type: "convert_token",
-                            client_id: "Ce2IjqmpZaMxCjfWZqxINt8qIzclJv2QNnzHNP7P",
+                            client_id: CLIENT_ID,
                             backend: "google-oauth2",
                             token: params['access_token']
                         }),
@@ -118,7 +116,7 @@
 
                 // Parameters to pass to OAuth 2.0 endpoint.
                 var params = {
-                    'client_id': CLIENT_ID,
+                    'client_id': GOOGLE_CLIENT_ID,
                     'redirect_uri': REDIRECT_URI,
                     'scope': 'https://www.googleapis.com/auth/userinfo.profile',
                     'state': 'authenticate',
@@ -142,10 +140,6 @@
         </script>
 
         <button onclick="trySampleRequest();">Try sample request</button>
-        {% endif %}
-        <div>
-
-        </div>
     </div>
 </body>
 
