@@ -14,10 +14,138 @@
         <p>Hello {{ user.username }}</p>
         <a href="{% url 'auth:logout' %}">Logout</a>
         {% else %}
-        <a href="{% url 'auth:social:begin' 'google-oauth2' %}">
-            Login
-        </a>
+        <script>
+            var CLIENT_ID = '{{SOCIAL_AUTH_GOOGLE_OAUTH2_KEY}}';
+            var REDIRECT_URI = '{% if request.is_secure %}https://{% else %}http://{% endif %}{{ request.get_host }}/auth-login';
+            var fragmentString = location.hash.substring(1);
+
+            // Parse query string to see if page request is coming from OAuth 2.0 server.
+            var params = {};
+            var regex = /([^&=]+)=([^&]*)/g, m;
+            while (m = regex.exec(fragmentString)) {
+                params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+            }
+            if (Object.keys(params).length > 0) {
+                localStorage.setItem('oauth2-params', JSON.stringify(params));
+                if (params['state'] && params['state'] == 'authenticate') {
+                    trySampleRequest();
+                }
+            }
+
+            function handleResponse(response) {
+                if (response.ok) {
+                    return response.text();
+                }
+                else {
+                    throw response;
+                }
+            }
+
+            function logError(message) {
+                return function (error) {
+                    console.error(message, error);
+                }
+            }
+
+            function trySampleRequest() {
+                var params = JSON.parse(localStorage.getItem('oauth2-params'));
+                if (params && params['access_token']) {
+                    fetch('https://oauth2.googleapis.com/tokeninfo?access_token=' + params['access_token'], {
+                        method: 'GET',
+                        mode: 'cors',
+                    })
+                        .then(handleResponse)
+                        .then((text) => { })
+                        .catch((error) => {
+                            oauth2SignIn();
+                        })
+                    fetch('/auth/convert-token', {
+                        method: 'POST',
+                        mode: 'same-origin',
+                        cache: 'no-cache',
+                        credentials: 'same-origin',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        redirect: 'follow',
+                        referrer: 'no-referrer',
+                        body: JSON.stringify({
+                            grant_type: "convert_token",
+                            client_id: "Ce2IjqmpZaMxCjfWZqxINt8qIzclJv2QNnzHNP7P",
+                            backend: "google-oauth2",
+                            token: params['access_token']
+                        }),
+                    })
+                        .then(handleResponse)
+                        .then((text) => {
+                            tokenAuthorized(JSON.parse(text));
+                        })
+                        .catch(logError("failed to convert token"));
+                } else {
+                    oauth2SignIn();
+                }
+            }
+
+            function tokenAuthorized(token) {
+                let access_token = token.access_token;
+                fetch('/api/profile', {
+                    method: 'GET',
+                    mode: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${access_token}`,
+                    },
+                    redirect: 'follow'
+                })
+                    .then(handleResponse)
+                    .then((text) => {
+                        console.log(text);
+                    })
+                    .catch(logError("failed to get profiles"));
+            }
+
+            /*
+             * Create form to request access token from Google's OAuth 2.0 server.
+             */
+            function oauth2SignIn() {
+                // Google's OAuth 2.0 endpoint for requesting an access token
+                var oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
+
+                // Create element to open OAuth 2.0 endpoint in new window.
+                var form = document.createElement('form');
+                form.setAttribute('method', 'GET'); // Send as a GET request.
+                form.setAttribute('action', oauth2Endpoint);
+
+                // Parameters to pass to OAuth 2.0 endpoint.
+                var params = {
+                    'client_id': CLIENT_ID,
+                    'redirect_uri': REDIRECT_URI,
+                    'scope': 'https://www.googleapis.com/auth/userinfo.profile',
+                    'state': 'authenticate',
+                    'include_granted_scopes': 'true',
+                    'response_type': 'token'
+                };
+
+                // Add form parameters as hidden input values.
+                for (var p in params) {
+                    var input = document.createElement('input');
+                    input.setAttribute('type', 'hidden');
+                    input.setAttribute('name', p);
+                    input.setAttribute('value', params[p]);
+                    form.appendChild(input);
+                }
+
+                // Add form to page and submit it to open the OAuth 2.0 endpoint.
+                document.body.appendChild(form);
+                form.submit();
+            }
+        </script>
+
+        <button onclick="trySampleRequest();">Try sample request</button>
         {% endif %}
+        <div>
+
+        </div>
     </div>
 </body>
 

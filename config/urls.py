@@ -20,9 +20,10 @@ from django.conf import settings
 from django.views.generic import RedirectView
 
 urlpatterns = [
-    path('', RedirectView.as_view(url='auth'), name='index'),
+    path('', RedirectView.as_view(url='auth-login'), name='index'),
     path('admin/', admin.site.urls, name='admin'),
-    path('auth/', include('authentication.urls'), name='auth'),
+    path('auth-login/', include('authentication.urls'), name='auth'),
+    path('auth/', include('rest_framework_social_oauth2.urls'), name='auth'),
     path('api/', include('api.urls'), name='profile'),
 ]
 

@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from rest_framework import permissions
 
 from api.serializers import ProfileSerializer
 from api.models import Profile
@@ -9,6 +10,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
     API endpoint that allows users to be viewed or edited.
     """
     serializer_class = ProfileSerializer
+    permission_classes = (permissions.IsAuthenticated,)
 
     def get_queryset(self):
         """
